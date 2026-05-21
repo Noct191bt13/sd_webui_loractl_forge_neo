@@ -4,6 +4,16 @@ from modules.processing import StableDiffusionProcessing
 import gradio as gr
 from loractl.lib import utils, plot, lora_ctl_network, forge_patching, xyz_integration
 
+try:
+    from state_registry import register
+    register("loractl", "Dynamic Lora Weights", [
+        {"elem_id": "loractl_enable", "type": "checkbox"},
+        {"elem_id": "loractl_weight_mode", "type": "radio"},
+        {"elem_id": "loractl_plot", "type": "checkbox"},
+    ])
+except Exception:
+    pass
+
 class LoraCtlScript(scripts.Script):
     def __init__(self):
         self.original_network = None
@@ -23,14 +33,15 @@ class LoraCtlScript(scripts.Script):
         with gr.Group():
             with gr.Accordion("Dynamic Lora Weights", open=False):
                 opt_enable = gr.Checkbox(
-                    value=False, label="Enable")
+                    value=False, label="Enable", elem_id="loractl_enable")
                 opt_weight_mode = gr.Radio(
                     choices=["Dynamic", "Static"],
                     value="Dynamic",
                     label="Weight mode",
+                    elem_id="loractl_weight_mode",
                     info="Dynamic = smooth interpolation, Static = instant jumps at scheduled steps")
                 opt_plot_lora_weight = gr.Checkbox(
-                    value=False, label="Plot the LoRA weight in all steps")
+                    value=False, label="Plot the LoRA weight in all steps", elem_id="loractl_plot")
         return [opt_enable, opt_weight_mode, opt_plot_lora_weight]
 
     def process(self, p: StableDiffusionProcessing, opt_enable=True, opt_weight_mode="Dynamic", opt_plot_lora_weight=False, **kwargs):
