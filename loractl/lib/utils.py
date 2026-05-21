@@ -5,7 +5,7 @@ import re
 
 
 def normalise_steps(step, n_steps):
-    if step >= 1:
+    if step > 1:
         return float(step)
     if step <= 0:
         return 0.0
