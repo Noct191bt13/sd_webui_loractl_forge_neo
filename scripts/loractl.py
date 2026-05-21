@@ -5,12 +5,24 @@ import gradio as gr
 from loractl.lib import utils, plot, lora_ctl_network, forge_patching, xyz_integration
 
 try:
-    from state_registry import register
-    register("loractl", "Dynamic Lora Weights", [
-        {"elem_id": "loractl_enable", "type": "checkbox"},
-        {"elem_id": "loractl_weight_mode", "type": "radio"},
-        {"elem_id": "loractl_plot", "type": "checkbox"},
-    ])
+    import modules.shared as _shared
+    _reg = getattr(_shared, "state_ext_registry", None)
+    if _reg is None:
+        _reg = []
+        setattr(_shared, "state_ext_registry", _reg)
+    for _e in _reg:
+        if _e["ext_id"] == "loractl":
+            break
+    else:
+        _reg.append({
+            "ext_id": "loractl",
+            "label": "Dynamic Lora Weights",
+            "elements": [
+                {"elem_id": "loractl_enable", "type": "checkbox"},
+                {"elem_id": "loractl_weight_mode", "type": "radio"},
+                {"elem_id": "loractl_plot", "type": "checkbox"},
+            ],
+        })
 except Exception:
     pass
 
