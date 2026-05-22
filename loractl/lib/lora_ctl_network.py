@@ -13,11 +13,13 @@ from modules.processing import StableDiffusionProcessing
 from modules.extra_networks import ExtraNetworkParams
 
 lora_weights = {}
+hr_lora_weights = {}
 
 params_map = {}
 
 def reset_weights():
     lora_weights.clear()
+    hr_lora_weights.clear()
     params_map.clear()
 
 class LoraCtlNetwork(extra_networks_lora.ExtraNetworkLora):
@@ -45,11 +47,18 @@ class LoraCtlNetwork(extra_networks_lora.ExtraNetworkLora):
                         initial_weight = float(params.positional[1])
                 except ValueError:
                     pass
-            weights = utils.params_to_weights(params, p.steps)
-            for (start_step, value) in weights.items():
+            weights = utils.sorted_positions(params.positional[1], p.steps)
+            for start_step, value in weights.items():
                 if start_step not in lora_weights:
                     lora_weights[start_step] = {}
                 lora_weights[start_step][name] = value
+            hr_raw = params.named.get("hr")
+            if hr_raw is not None:
+                hr_weights = utils.sorted_positions(str(hr_raw), p.steps)
+                for start_step, value in hr_weights.items():
+                    if start_step not in hr_lora_weights:
+                        hr_lora_weights[start_step] = {}
+                    hr_lora_weights[start_step][name] = value
             params.positional = [name, initial_weight]
             params.named = {}
             params_map[name] = params

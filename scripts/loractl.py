@@ -4,28 +4,6 @@ from modules.processing import StableDiffusionProcessing
 import gradio as gr
 from loractl.lib import utils, plot, lora_ctl_network, forge_patching, xyz_integration
 
-try:
-    import modules.shared as _shared
-    _reg = getattr(_shared, "state_ext_registry", None)
-    if _reg is None:
-        _reg = []
-        setattr(_shared, "state_ext_registry", _reg)
-    for _e in _reg:
-        if _e["ext_id"] == "loractl":
-            break
-    else:
-        _reg.append({
-            "ext_id": "loractl",
-            "label": "Dynamic Lora Weights",
-            "elements": [
-                {"elem_id": "loractl_enable", "type": "checkbox"},
-                {"elem_id": "loractl_weight_mode", "type": "radio"},
-                {"elem_id": "loractl_plot", "type": "checkbox"},
-            ],
-        })
-except Exception:
-    pass
-
 class LoraCtlScript(scripts.Script):
     def __init__(self):
         self.original_network = None
@@ -45,10 +23,10 @@ class LoraCtlScript(scripts.Script):
         with gr.Group():
             with gr.Accordion("Dynamic Lora Weights", open=False):
                 opt_enable = gr.Checkbox(
-                    value=False, label="Enable", elem_id="loractl_enable")
+                    value=True, label="Enable", elem_id="loractl_enable")
                 opt_weight_mode = gr.Radio(
-                    choices=["Dynamic", "Static"],
-                    value="Dynamic",
+                    choices=["Static", "Dynamic"],
+                    value="Static",
                     label="Weight mode",
                     elem_id="loractl_weight_mode",
                     info="Dynamic = smooth interpolation, Static = instant jumps at scheduled steps")
@@ -56,7 +34,7 @@ class LoraCtlScript(scripts.Script):
                     value=False, label="Plot the LoRA weight in all steps", elem_id="loractl_plot")
         return [opt_enable, opt_weight_mode, opt_plot_lora_weight]
 
-    def process(self, p: StableDiffusionProcessing, opt_enable=True, opt_weight_mode="Dynamic", opt_plot_lora_weight=False, **kwargs):
+    def process(self, p: StableDiffusionProcessing, opt_enable=True, opt_weight_mode="Static", opt_plot_lora_weight=False, **kwargs):
         current_network = extra_networks.extra_network_registry.get("lora")
         if opt_enable and not isinstance(current_network, lora_ctl_network.LoraCtlNetwork):
             self.original_network = current_network

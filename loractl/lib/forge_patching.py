@@ -5,7 +5,7 @@ from backend.args import dynamic_args
 from backend.patcher.base import ModelPatcher as Patcher
 from modules import script_callbacks, shared
 from modules.script_callbacks import AfterCFGCallbackParams
-from loractl.lib.lora_ctl_network import lora_weights
+from loractl.lib.lora_ctl_network import lora_weights, hr_lora_weights
 from loractl.lib import utils
 
 lora_patch_tracker = {}
@@ -145,13 +145,18 @@ def _on_cfg_after_cfg(params: AfterCFGCallbackParams):
     if next_step >= params.total_sampling_steps:
         return
 
-    step_weight = _resolve_step_weight(lora_weights, next_step)
+    weights_source = hr_lora_weights if utils.is_hires() and hr_lora_weights else lora_weights
+    step_weight = _resolve_step_weight(weights_source, next_step)
     if step_weight is None:
         return
 
     if step_weight == _last_applied:
         return
+    changed = step_weight if _last_applied is None else {k: v for k, v in step_weight.items() if _last_applied.get(k) != v}
     _last_applied = step_weight
+    if shared.opts.data.get("loractl_log_weights", False):
+        formatted = {k: round(v, 3) for k, v in changed.items()}
+        print(f"[Loractl] Weights changed at step {next_step}: {formatted}")
 
     _update_online_patches(step_weight, unet, objects.clip)
     unet.refresh_loras()
@@ -160,3 +165,9 @@ def _on_cfg_after_cfg(params: AfterCFGCallbackParams):
 
 
 script_callbacks.on_cfg_after_cfg(_on_cfg_after_cfg)
+
+
+def on_ui_settings():
+    shared.opts.add_option("loractl_log_weights", shared.OptionInfo(False, "Log weight changes", section=("loractl", "Dynamic Lora Weights")))
+
+script_callbacks.on_ui_settings(on_ui_settings)

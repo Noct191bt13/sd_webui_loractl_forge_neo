@@ -18,7 +18,7 @@ Dynamically control LoRA weights over the course of generation using keyframe sy
 In the webui Extensions tab → "Install from URL":
 
 ```
-https://github.com/anomalyco/sd_webui_loractl_forge_neo
+https://github.com/Noct191bt13/sd_webui_loractl_forge_neo
 ```
 
 Then "Apply and restart UI".
@@ -46,8 +46,8 @@ Examples:
 
 | Mode | Behavior |
 |------|----------|
-| **Dynamic** (default) | Smooth interpolation between keyframes |
-| **Static** | Instant jump at each keyframe, held constant between them |
+| **Static** (default) | Instant jump at each keyframe, held constant between them |
+| **Dynamic** | Smooth interpolation between keyframes |
 
 ### Separate high-res pass
 
@@ -55,7 +55,7 @@ Examples:
 <lora:name:0@0,1@1:hr=0.5@0,1@1>
 ```
 
-Named params: `hr`, `hrte`, `hrunet`
+Named params: `hr`
 
 ### XYZ grid
 
