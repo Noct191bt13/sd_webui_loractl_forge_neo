@@ -46,6 +46,13 @@ class LoraCtlScript(scripts.Script):
             extra_networks.register_extra_network(self.original_network)
             self.original_network = None
             self.network_replaced = False
+            try:
+                from modules import sd_models
+                current_sd = sd_models.model_data.get_sd_model()
+                if current_sd is not None:
+                    current_sd.current_lora_hash = ''
+            except Exception:
+                pass
 
         utils.set_hires(False)
         utils.set_active(opt_enable)

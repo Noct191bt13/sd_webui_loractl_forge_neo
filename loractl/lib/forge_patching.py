@@ -25,10 +25,18 @@ def install_patch_tracker():
     _original_add_patches = Patcher.add_patches
 
     def _tracking_add_patches(self, patches, strength_patch=1.0, strength_model=1.0, *, filename=None, online_mode=None):
+        pre_counts = {}
+        if filename and online_mode:
+            for k in patches:
+                key = k if isinstance(k, str) else k[0]
+                pre_counts[key] = len(self.online_patches.get(key, []))
         loaded_keys = _original_add_patches(self, patches, strength_patch, strength_model, filename=filename, online_mode=online_mode)
         if filename and online_mode:
             basename = os.path.splitext(os.path.basename(filename))[0]
-            lora_patch_tracker.setdefault(basename, []).extend(loaded_keys)
+            for k_key in loaded_keys:
+                skey = k_key if isinstance(k_key, str) else k_key[0]
+                start = pre_counts.get(skey, 0)
+                lora_patch_tracker.setdefault(basename, {})[skey] = start
         return loaded_keys
 
     Patcher.add_patches = _tracking_add_patches
@@ -110,16 +118,15 @@ def _update_online_patches(step_weight, unet, clip):
                 break
         else:
             fname = lora_name
-        keys = lora_patch_tracker.get(fname, [])
-        for key in keys:
+        key_indices = lora_patch_tracker.get(fname, {})
+        for key, patch_idx in key_indices.items():
             if key in unet.online_patches:
                 patches = unet.online_patches[key]
-                for i in range(len(patches)):
-                    patches[i] = (float(target_weight),) + patches[i][1:]
+                patches[patch_idx] = (float(target_weight),) + patches[patch_idx][1:]
             if clip is not None and hasattr(clip, 'patcher') and key in clip.patcher.online_patches:
                 patches = clip.patcher.online_patches[key]
-                for i in range(len(patches)):
-                    patches[i] = (float(target_weight),) + patches[i][1:]
+                if patch_idx < len(patches):
+                    patches[patch_idx] = (float(target_weight),) + patches[patch_idx][1:]
 
 
 def _on_cfg_after_cfg(params: AfterCFGCallbackParams):
