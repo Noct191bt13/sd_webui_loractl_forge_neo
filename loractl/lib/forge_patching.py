@@ -150,6 +150,8 @@ def _on_cfg_after_cfg(params: AfterCFGCallbackParams):
     next_step = _cfg_callback_count
 
     if next_step >= params.total_sampling_steps:
+        _cfg_callback_count = 0
+        _last_applied = None
         return
 
     weights_source = hr_lora_weights if utils.is_hires() and hr_lora_weights else lora_weights
