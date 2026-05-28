@@ -4,10 +4,10 @@ from loractl.lib import utils
 import sys
 from pathlib import Path
 
-lora_path = str(Path(__file__).parent.parent.parent.parent.parent / "extensions-builtin" / "sd_forge_lora")
-sys.path.insert(0, lora_path)
-import network, networks, extra_networks_lora  # type: ignore
-sys.path.remove(lora_path)
+lora_parent = str(Path(__file__).parent.parent.parent.parent.parent / "extensions-builtin")
+sys.path.insert(0, lora_parent)
+from sd_forge_lora import network, networks, extra_networks_lora  # type: ignore
+sys.path.remove(lora_parent)
 
 from modules.processing import StableDiffusionProcessing
 from modules.extra_networks import ExtraNetworkParams
